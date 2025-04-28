@@ -1,0 +1,99 @@
+<!-- templates/api_scraper/search.html -->
+{% extends 'base.html' %}
+
+{% block title %}API Conference Search{% endblock %}
+
+{% block content %}
+<h2>Search Conferences using APIs</h2>
+<p class="lead">Find relevant academic and business conferences in your domain</p>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="post" class="row g-3">
+            {% csrf_token %}
+            <div class="col-md-6">
+                <label for="domain" class="form-label">Domain/Keyword</label>
+                <input type="text" class="form-control" id="domain" name="domain" value="{{ domain|default:'' }}" placeholder="e.g., AI, Machine Learning, Finance" required>
+            </div>
+            <div class="col-md-4">
+                <label for="type" class="form-label">Conference Type</label>
+                <select class="form-select" id="type" name="type">
+                    <option value="both" {% if type == 'both' %}selected{% endif %}>Both</option>
+                    <option value="academic" {% if type == 'academic' %}selected{% endif %}>Academic/Paper Conferences</option>
+                    <option value="business" {% if type == 'business' %}selected{% endif %}>Business Conferences</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">Search</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+{% endif %}
+
+{% if conferences %}
+    <h3>Search Results</h3>
+    <p>Found {{ conferences|length }} conferences related to "{{ domain }}":</p>
+    
+    <div class="row">
+        {% for conference in conferences %}
+            <div class="col-md-6">
+                <div class="card conference-card mb-3">
+                    <div class="card-body">
+                        <span class="badge {% if conference.type == 'academic' %}bg-primary{% else %}bg-success{% endif %} method-badge">
+                            {{ conference.type|title }}
+                        </span>
+                        <h5 class="card-title">{{ conference.title }}</h5>
+                        {% if conference.date %}
+                            <h6 class="card-subtitle mb-2 text-muted">{{ conference.date }}</h6>
+                        {% endif %}
+                        {% if conference.location %}
+                            <p class="text-muted small"><i class="bi bi-geo-alt"></i> {{ conference.location }}</p>
+                        {% endif %}
+                        {% if conference.description %}
+                        <p class="card-text">{{ conference.description|truncatechars:150 }}</p>
+                    {% endif %}
+                    <a href="{{ conference.url }}" class="btn btn-sm btn-outline-primary" target="_blank">Visit Website</a>
+                    
+                            </div>
+                            <div class="card-footer text-muted">
+                                <small>Source: {{ conference.source }}</small>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <div class="mt-4">
+                <a href="{% url 'common:conference_list' %}?method=api" class="btn btn-outline-secondary">View All API-Found Conferences</a>
+            </div>
+        {% elif domain %}
+            <div class="alert alert-info">
+                No conferences found for "{{ domain }}". Try a different search term.
+            </div>
+        {% endif %}
+        {% endblock %}
+        
+        {% block extra_scripts %}
+        <script>
+            // You could add AJAX functionality here to load results without page refresh
+            // For example:
+            /*
+            document.querySelector('form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const domain = document.getElementById('domain').value;
+                const type = document.getElementById('type').value;
+                
+                fetch(`/api/results-json/?domain=${domain}&type=${type}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Handle the results
+                        console.log(data);
+                    });
+            });
+            */
+        </script>
+        {% endblock %}

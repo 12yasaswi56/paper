@@ -1,0 +1,64 @@
+<!-- templates/common/home.html -->
+{% extends 'base.html' %}
+
+{% block title %}Conference Scraper - Home{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title">Filtered Search</h2>
+                {% comment %} <p class="card-text">Search for conferences using third-party APIs. This method is typically faster and more reliable, but may have usage limits.</p> {% endcomment %}
+                <a href="{% url 'api_scraper:search' %}" class="btn btn-primary"> API Search</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title">Unfiltered Search</h2>
+                {% comment %} <p class="card-text">Search for conferences by directly scraping websites. This method may provide more up-to-date results but could be slower.</p> {% endcomment %}
+                <a href="{% url 'direct_scraper:search' %}" class="btn btn-primary">Direct Search</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h3>Recently Found Conferences</h3>
+
+{% if recent_conferences %}
+    <div class="row">
+        {% for conference in recent_conferences %}
+            <div class="col-md-6">
+                <div class="card conference-card">
+                    <div class="card-body">
+                        <span class="badge bg-{% if conference.scrape_method == 'api' %}info{% else %}success{% endif %} method-badge">
+                            {{ conference.scrape_method|title }}
+                        </span>
+                        <h5 class="card-title">{{ conference.title }}</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">
+                            {{ conference.get_type_display }}
+                            {% if conference.date %} - {{ conference.date }}{% endif %}
+                        </h6>
+                        {% if conference.location %}
+                            <p class="text-muted small"><i class="bi bi-geo-alt"></i> {{ conference.location }}</p>
+                        {% endif %}
+                        {% if conference.description %}
+                            <p class="card-text">{{ conference.description|truncatechars:100 }}</p>
+                        {% endif %}
+                        <a href="{{ conference.url }}" class="btn btn-sm btn-outline-primary" target="_blank">Visit Website</a>
+                    </div>
+                    <div class="card-footer text-muted">
+                        <small>Source: {{ conference.source_site }}</small>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="alert alert-info">
+        No conferences found yet. Try searching using one of the methods above.
+    </div>
+{% endif %}
+{% endblock %}

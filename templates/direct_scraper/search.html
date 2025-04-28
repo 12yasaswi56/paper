@@ -1,0 +1,86 @@
+<!-- templates/direct_scraper/search.html -->
+{% extends 'base.html' %}
+
+{% block title %}Direct Conference Search{% endblock %}
+
+{% block content %}
+<h2>Search Conferences with Direct Scraping</h2>
+<p class="lead">Find relevant academic and business conferences by directly scraping websites</p>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="post" class="row g-3">
+            {% csrf_token %}
+            <div class="col-md-6">
+                <label for="domain" class="form-label">Domain/Keyword</label>
+                <input type="text" class="form-control" id="domain" name="domain" value="{{ domain|default:'' }}" placeholder="e.g., AI, Machine Learning, Finance" required>
+            </div>
+            <div class="col-md-4">
+                <label for="type" class="form-label">Conference Type</label>
+                <select class="form-select" id="type" name="type">
+                    <option value="both" {% if type == 'both' %}selected{% endif %}>Both</option>
+                    <option value="academic" {% if type == 'academic' %}selected{% endif %}>Academic/Paper Conferences</option>
+                    <option value="business" {% if type == 'business' %}selected{% endif %}>Business Conferences</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">Search</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+{% endif %}
+
+{% if conferences %}
+    <h3>Search Results</h3>
+    <p>Found {{ conferences|length }} conferences related to "{{ domain }}":</p>
+    
+    <div class="row">
+        {% for conference in conferences %}
+            <div class="col-md-6">
+                <div class="card conference-card mb-3">
+                    <div class="card-body">
+                        <span class="badge {% if conference.type == 'academic' %}bg-primary{% else %}bg-success{% endif %} method-badge">
+                            {{ conference.type|title }}
+                        </span>
+                        <h5 class="card-title">{{ conference.title }}</h5>
+
+                        {% if conference.date %}
+                            <h6 class="card-subtitle mb-2 text-muted">{{ conference.date }}</h6>
+                        {% endif %}
+                        
+                        {% if conference.location %}
+                            <p class="text-muted small"><i class="bi bi-geo-alt"></i> {{ conference.location }}</p>
+                        {% endif %}
+                        
+                        {% if conference.description %}
+                            <p class="card-text">{{ conference.description|truncatechars:150 }}</p>
+                        {% endif %}
+                        
+                        <a href="{{ conference.url }}" target="_blank" class="btn btn-sm btn-outline-primary mb-2">Visit Website</a>
+                        
+                        <p class="mb-0">
+                            <small>Source: {{ conference.source }}</small>
+                        </p>
+                        
+                        {% if conference.url and conference.source and conference.url != conference.source %}
+                            <p class="mb-0"><small>(Redirects to: <a href="{{ conference.url }}" target="_blank">{{ conference.url }}</a>)</small></p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="mt-4">
+        <a href="{% url 'common:conference_list' %}?method=direct" class="btn btn-outline-secondary">View All Direct-Scraped Conferences</a>
+    </div>
+{% elif domain %}
+    <div class="alert alert-info">
+        No conferences found for "{{ domain }}". Try a different search term.
+    </div>
+{% endif %}
+{% endblock %}
